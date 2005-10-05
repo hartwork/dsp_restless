@@ -1,0 +1,37 @@
+# Project: dsp_restless
+# Makefile created by Dev-C++ 4.9.9.2
+
+CPP  = g++.exe
+CC   = gcc.exe
+WINDRES = windres.exe
+RES  = ../Build_Temp/dsp_restless_private.res
+OBJ  = ../Build_Temp/dsp_restless.o $(RES)
+LINKOBJ  = ../Build_Temp/dsp_restless.o $(RES)
+LIBS =  -L"lib" -L"F:/devcpp/qt4/lib" --no-export-all-symbols --add-stdcall-alias  -s -mmmx 
+INCS =  -I"include"  -I"F:/devcpp/qt4/include/"  -I"F:/devcpp/qt4/include/Qt"  -I"F:/devcpp/qt4/include/QtGui"  -I"F:/devcpp/dx8_include" 
+CXXINCS =  -I"lib/gcc/mingw32/3.4.2/include"  -I"include/c++/3.4.2/backward"  -I"include/c++/3.4.2/mingw32"  -I"include/c++/3.4.2"  -I"include"  -I"F:/devcpp/qt4/include/"  -I"F:/devcpp/qt4/include/Qt"  -I"F:/devcpp/qt4/include/QtCore"  -I"F:/devcpp/qt4/include/QtGui"  -I"F:/devcpp/dx8_include" 
+BIN  = ../Binary/dsp_restless.dll
+CXXFLAGS = $(CXXINCS) -DBUILDING_DLL=1   -fexpensive-optimizations -O3 -mmmx
+CFLAGS = $(INCS) -DBUILDING_DLL=1   -fexpensive-optimizations -O3 -mmmx
+RM = rm -f
+
+.PHONY: all all-before all-after clean clean-custom
+
+all: all-before ../Binary/dsp_restless.dll all-after
+
+
+clean: clean-custom
+	${RM} $(OBJ) $(BIN)
+
+DLLWRAP=dllwrap.exe
+DEFFILE=../Binary/libdsp_restless.def
+STATICLIB=../Binary/libdsp_restless.a
+
+$(BIN): $(LINKOBJ)
+	$(DLLWRAP) --output-def $(DEFFILE) --driver-name c++ --implib $(STATICLIB) $(LINKOBJ) $(LIBS) -o $(BIN)
+
+../Build_Temp/dsp_restless.o: dsp_restless.cpp Dsp.h
+	$(CPP) -c dsp_restless.cpp -o ../Build_Temp/dsp_restless.o $(CXXFLAGS)
+
+../Build_Temp/dsp_restless_private.res: dsp_restless_private.rc 
+	$(WINDRES) -i dsp_restless_private.rc --input-format=rc -o ../Build_Temp/dsp_restless_private.res -O coff 
