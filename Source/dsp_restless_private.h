@@ -5,7 +5,7 @@
 #define DSP_RESTLESS_PRIVATE_H
 
 /* VERSION DEFINITIONS */
-#define VER_STRING	"1.1.1.7"
+#define VER_STRING	"1.1.2.1"
 #define VER_MAJOR	1
 #define VER_MINOR	1
 #define VER_RELEASE	1
