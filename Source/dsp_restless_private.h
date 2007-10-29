@@ -5,12 +5,12 @@
 #define DSP_RESTLESS_PRIVATE_H
 
 /* VERSION DEFINITIONS */
-#define VER_STRING	"1.1.2.1"
+#define VER_STRING	"1.2.0.1"
 #define VER_MAJOR	1
-#define VER_MINOR	1
-#define VER_RELEASE	1
-#define VER_BUILD	7
-#define COMPANY_NAME	"Hartwork Project (http://www.hartwork.org)"
+#define VER_MINOR	2
+#define VER_RELEASE	0
+#define VER_BUILD	1
+#define COMPANY_NAME	"Hartwork Project http://www.hartwork.org/"
 #define FILE_VERSION	""
 #define FILE_DESCRIPTION	"Restless Winamp Plugin"
 #define INTERNAL_NAME	""

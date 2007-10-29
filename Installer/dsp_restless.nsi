@@ -3,8 +3,8 @@
 ; This script was derived from the 'Winamp Plugin Installer' example:
 ; http://nsis.sourceforge.net/Winamp_Plugin_Installer_Scripts
 
-!define VERSION "1.1.2"
-!define VER_ALT "1_1_2"
+!define VERSION "1.2.0"
+!define VER_ALT "1_2_0"
 !define PLUG "Restless Winamp Plugin"
 !define PLUG_ALT "dsp_restless"
 !define PLUG_FILE "dsp_restless"

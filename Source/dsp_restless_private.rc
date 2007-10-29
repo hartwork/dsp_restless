@@ -8,15 +8,15 @@
 // TO CHANGE VERSION INFORMATION, EDIT PROJECT OPTIONS...
 //
 1 VERSIONINFO
-FILEVERSION 1,1,2,1
-PRODUCTVERSION 1,1,2,1
+FILEVERSION 1,2,0,1
+PRODUCTVERSION 1,2,0,1
 FILETYPE VFT_DLL
 {
   BLOCK "StringFileInfo"
 	 {
 		 BLOCK "040904E4"
 		 {
-			 VALUE "CompanyName", "Hartwork Project (http://www.hartwork.org)"
+			 VALUE "CompanyName", "Hartwork Project http://www.hartwork.org/"
 			 VALUE "FileVersion", ""
 			 VALUE "FileDescription", "Restless Winamp Plugin"
 			 VALUE "InternalName", ""

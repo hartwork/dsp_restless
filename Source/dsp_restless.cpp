@@ -11,6 +11,9 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <time.h>
+#include <stdio.h>
+
 #include "Dsp.h"
 #include "wa_ipc.h"
 
@@ -25,12 +28,19 @@
 
 
 static const char * const INI_SECTION = "Restless Winamp Plugin";
-static const char * const INI_KEY = "Hit_Start_After_Millis";
+static const char * const INI_KEY_HIT_START_AFTER_MILLIS = "Hit_Start_After_Millis";
+static const char * const INI_KEY_HIT_START_AFTER_MINUTES_SECONDS = "Hit_Start_After_Minutes_Seconds";
+static const char * const INI_KEY_PAUSE_INTERVAL_OPEN = "Pause_Interval_Open";
+static const char * const INI_KEY_PAUSE_INTERVAL_CLOSE = "Pause_Interval_Close";
+static const char * const INI_KEY_PAUSE_ENABLED = "Pause_Enabled";
 
 DWORD lastPlayingTimestamp = 0;
 UINT_PTR hTimer = 0;
 unsigned int hitStartAfterMillis = 5000;
 const char * fullWinampIniPath = NULL;
+unsigned int pauseLeftMinutes = 24 * 60;
+unsigned int pauseRightMinutes = 24 * 60;
+bool pauseEnabled = false;
 
 
 
@@ -38,7 +48,6 @@ void config_restless(struct winampDSPModule * this_mod);
 int init_restless(struct winampDSPModule * this_mod);
 int apply_restless(struct winampDSPModule * this_mod, short int * samples, int numsamples, int bps, int nch, int srate);
 void quit_restless(struct winampDSPModule * this_mod);
-
 winampDSPModule * getModule(int which);
 
 BOOL WritePrivateProfileInt(LPCTSTR lpAppName, LPCTSTR lpKeyName, int iValue, LPCTSTR lpFileName);
@@ -50,7 +59,7 @@ BOOL WritePrivateProfileInt(LPCTSTR lpAppName, LPCTSTR lpKeyName, int iValue, LP
 ////////////////////////////////////////////////////////////////////////////////
 winampDSPHeader header = {
 	DSP_HDRVER,
-	"Restless Winamp Plugin // 2007-08-08",
+	"Restless Winamp Plugin // 2007-10-29",
 	getModule
 };
 
@@ -83,7 +92,7 @@ void config_restless(struct winampDSPModule * this_mod) {
 		"Copyright © 2007 Sebastian Pipping   \n"
 		"<webmaster@hartwork.org>\n"
 		"\n"
-		"-->  http://www.hartwork.org",
+		"-->  http://www.hartwork.org/",
 		"About",
 		MB_ICONINFORMATION
 	);
@@ -100,8 +109,36 @@ VOID CALLBACK TimerProc(HWND /*hwnd*/, UINT /*uMsg*/,
 	if (now - lastPlayingTimestamp > hitStartAfterMillis)
 	{
 		lastPlayingTimestamp = now;
-		SendMessage(mod_restless.hwndParent, WM_WA_IPC, 0, IPC_STARTPLAY);
+
+		const time_t nowStamp = time(NULL);
+		struct tm * nowDetails = localtime(&nowStamp);
+		const unsigned int nowHourMinutes = nowDetails->tm_hour * 60
+				+ nowDetails->tm_min;
+
+		// Within pause interval?
+		if (!(pauseEnabled
+				&& (nowHourMinutes >= pauseLeftMinutes)
+				&& (nowHourMinutes < pauseRightMinutes))) {
+			SendMessage(mod_restless.hwndParent, WM_WA_IPC, 0, IPC_STARTPLAY);
+		}
 	}
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+///
+////////////////////////////////////////////////////////////////////////////////
+void extractAroundColon(const char * text, unsigned int & output,
+		unsigned int def) {
+	unsigned int first;
+	unsigned int second;
+	if (sscanf(text, "%u:%2u", &first, &second) == 2) {
+		if (second <= 59) {
+			def = first * 60 + second;
+		}
+	}
+	output = def;
 }
 
 
@@ -117,9 +154,42 @@ int init_restless(struct winampDSPModule * /*this_mod*/) {
 	// Read config
 	if (fullWinampIniPath != NULL) {
 		const int candidate = GetPrivateProfileInt(INI_SECTION,
-				INI_KEY, -1, fullWinampIniPath);
-		if ((candidate >= 1000) && (candidate <= 60000)) {
+				INI_KEY_HIT_START_AFTER_MILLIS, -1, fullWinampIniPath);
+		if ((candidate >= 1000) && (candidate <= (1 << 30))) {
 			hitStartAfterMillis = candidate;
+		}
+
+		char oneColonTwo[10];
+		int len = GetPrivateProfileString(INI_SECTION,
+				INI_KEY_HIT_START_AFTER_MINUTES_SECONDS, "", oneColonTwo,
+				10, fullWinampIniPath);
+		if (len >= 4) {
+			unsigned int candidate;
+			extractAroundColon(oneColonTwo, candidate, 0);
+			if ((candidate >= 1) && (candidate <= ((1 << 30) / 1000))) {
+				hitStartAfterMillis = candidate * 1000;
+			}
+		}
+
+		len = GetPrivateProfileString(INI_SECTION,
+				INI_KEY_PAUSE_INTERVAL_OPEN, "", oneColonTwo, 10, fullWinampIniPath);
+		if (len >= 4) {
+			extractAroundColon(oneColonTwo, pauseLeftMinutes, 24 * 60);
+		}
+
+		len = GetPrivateProfileString(INI_SECTION,
+				INI_KEY_PAUSE_INTERVAL_CLOSE, "", oneColonTwo, 10, fullWinampIniPath);
+		if (len >= 4) {
+			extractAroundColon(oneColonTwo, pauseRightMinutes, 24 * 60);
+		}
+
+		char zeroOrNot[10];
+		len = GetPrivateProfileString(INI_SECTION,
+				INI_KEY_PAUSE_ENABLED, "0", zeroOrNot, 10, fullWinampIniPath);
+		if (len >= 1) {
+			if (strcmp(zeroOrNot, "0")) {
+				pauseEnabled = true;
+			}
 		}
 	}
 
@@ -152,8 +222,31 @@ void quit_restless(struct winampDSPModule * /*this_mod*/) {
 
 	// Write config
 	if (fullWinampIniPath != NULL) {
-		WritePrivateProfileInt(INI_SECTION, INI_KEY,
+		char oneColonTwo[20];
+		WritePrivateProfileInt(INI_SECTION, INI_KEY_HIT_START_AFTER_MILLIS,
 				hitStartAfterMillis, fullWinampIniPath);
+
+		if ((hitStartAfterMillis % 1000) == 0) {
+			unsigned int seconds = hitStartAfterMillis / 1000;
+			sprintf(oneColonTwo, "%02i:%02i", seconds / 60,
+					seconds % 60);
+			WritePrivateProfileString(INI_SECTION,
+					INI_KEY_HIT_START_AFTER_MINUTES_SECONDS,
+					oneColonTwo, fullWinampIniPath);
+		}
+
+		sprintf(oneColonTwo, "%02i:%02i", pauseLeftMinutes / 60,
+				pauseLeftMinutes % 60);
+		WritePrivateProfileString(INI_SECTION, INI_KEY_PAUSE_INTERVAL_OPEN,
+				oneColonTwo, fullWinampIniPath);
+
+		sprintf(oneColonTwo, "%02i:%02i", pauseRightMinutes / 60,
+				pauseRightMinutes % 60);
+		WritePrivateProfileString(INI_SECTION, INI_KEY_PAUSE_INTERVAL_CLOSE,
+				oneColonTwo, fullWinampIniPath);
+
+		WritePrivateProfileString(INI_SECTION, INI_KEY_PAUSE_ENABLED,
+				pauseEnabled ? "1" : "0", fullWinampIniPath);
 	}
 }
 
