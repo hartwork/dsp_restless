@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// Restless Winamp Plugin
 ///
-/// Copyright © 2007  Sebastian Pipping <webmaster@hartwork.org>
+/// Copyright © 2017  Sebastian Pipping <webmaster@hartwork.org>
 ///
 /// -->  http://www.hartwork.org/
 ///
@@ -30,6 +30,7 @@
 static const char * const INI_SECTION = "Restless Winamp Plugin";
 static const char * const INI_KEY_HIT_START_AFTER_MILLIS = "Hit_Start_After_Millis";
 static const char * const INI_KEY_HIT_START_AFTER_MINUTES_SECONDS = "Hit_Start_After_Minutes_Seconds";
+static const char * const INI_KEY_ONLY_WHEN_REPEAT = "Hit_Start_Only_When_Repeat_Enabled";
 static const char * const INI_KEY_PAUSE_INTERVAL_OPEN = "Pause_Interval_Open";
 static const char * const INI_KEY_PAUSE_INTERVAL_CLOSE = "Pause_Interval_Close";
 static const char * const INI_KEY_PAUSE_ENABLED = "Pause_Enabled";
@@ -41,6 +42,7 @@ const char * fullWinampIniPath = NULL;
 unsigned int pauseLeftMinutes = 24 * 60;
 unsigned int pauseRightMinutes = 24 * 60;
 bool pauseEnabled = false;
+bool checkRepeat = false;
 
 
 
@@ -59,7 +61,7 @@ BOOL WritePrivateProfileInt(LPCTSTR lpAppName, LPCTSTR lpKeyName, int iValue, LP
 ////////////////////////////////////////////////////////////////////////////////
 winampDSPHeader header = {
 	DSP_HDRVER,
-	"Restless Winamp Plugin // 2007-10-29",
+	"Restless Winamp Plugin // 2017-07-20",
 	getModule
 };
 
@@ -89,7 +91,7 @@ void config_restless(struct winampDSPModule * this_mod) {
 		this_mod->hwndParent,
 		"Restless Winamp Plugin\n"
 		"\n"
-		"Copyright © 2007 Sebastian Pipping   \n"
+		"Copyright © 2017 Sebastian Pipping   \n"
 		"<webmaster@hartwork.org>\n"
 		"\n"
 		"-->  http://www.hartwork.org/",
@@ -119,7 +121,12 @@ VOID CALLBACK TimerProc(HWND /*hwnd*/, UINT /*uMsg*/,
 		if (!(pauseEnabled
 				&& (nowHourMinutes >= pauseLeftMinutes)
 				&& (nowHourMinutes < pauseRightMinutes))) {
-			SendMessage(mod_restless.hwndParent, WM_WA_IPC, 0, IPC_STARTPLAY);
+			unsigned int repeatEnabled;
+			repeatEnabled = SendMessage(mod_restless.hwndParent,
+							WM_WA_IPC, 0, IPC_GET_REPEAT);
+			if (((checkRepeat) && (repeatEnabled == 1)) || (!(checkRepeat))) {
+				SendMessage(mod_restless.hwndParent, WM_WA_IPC, 0, IPC_STARTPLAY);
+			}
 		}
 	}
 }
@@ -191,6 +198,14 @@ int init_restless(struct winampDSPModule * /*this_mod*/) {
 				pauseEnabled = true;
 			}
 		}
+
+		len = GetPrivateProfileString(INI_SECTION,
+				INI_KEY_ONLY_WHEN_REPEAT, "0", zeroOrNot, 10, fullWinampIniPath);
+		if (len >= 1) {
+			if (strcmp(zeroOrNot, "1") == 0) {
+				checkRepeat = true;
+			}
+		}
 	}
 
 	// Setup timer, half the time to get proper delay
@@ -234,6 +249,9 @@ void quit_restless(struct winampDSPModule * /*this_mod*/) {
 					INI_KEY_HIT_START_AFTER_MINUTES_SECONDS,
 					oneColonTwo, fullWinampIniPath);
 		}
+
+		WritePrivateProfileString(INI_SECTION, INI_KEY_ONLY_WHEN_REPEAT,
+				checkRepeat ? "1" : "0", fullWinampIniPath);
 
 		sprintf(oneColonTwo, "%02i:%02i", pauseLeftMinutes / 60,
 				pauseLeftMinutes % 60);

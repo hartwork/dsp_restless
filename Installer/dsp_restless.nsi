@@ -1,10 +1,10 @@
-; Copyright © 2007  Sebastian Pipping <webmaster@hartwork.org>
+; Copyright © 2017  Sebastian Pipping <webmaster@hartwork.org>
 ;
 ; This script was derived from the 'Winamp Plugin Installer' example:
 ; http://nsis.sourceforge.net/Winamp_Plugin_Installer_Scripts
 
-!define VERSION "1.2.0"
-!define VER_ALT "1_2_0"
+!define VERSION "1.3.0"
+!define VER_ALT "1_3_0"
 !define PLUG "Restless Winamp Plugin"
 !define PLUG_ALT "dsp_restless"
 !define PLUG_FILE "dsp_restless"
