@@ -1,9 +1,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// Restless Winamp Plugin
 ///
-/// Copyright © 2017  Sebastian Pipping <webmaster@hartwork.org>
+/// Copyright ï¿½ 2005  Sebastian Pipping <webmaster@hartwork.org>
+/// Copyright ï¿½ 2017  M. Wysocki
 ///
-/// -->  http://www.hartwork.org/
+/// -->  https://github.com/hartwork/dsp_restless
 ///
 /// This source code is released as Public Domain.
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,10 +92,11 @@ void config_restless(struct winampDSPModule * this_mod) {
 		this_mod->hwndParent,
 		"Restless Winamp Plugin\n"
 		"\n"
-		"Copyright © 2017 Sebastian Pipping   \n"
+		"Copyright ï¿½ 2005 Sebastian Pipping   \n"
 		"<webmaster@hartwork.org>\n"
+		"Copyright ï¿½ 2017 M. Wysocki   \n"
 		"\n"
-		"-->  http://www.hartwork.org/",
+		"-->  https://github.com/hartwork/dsp_restless",
 		"About",
 		MB_ICONINFORMATION
 	);
